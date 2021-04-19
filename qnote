@@ -1,21 +1,26 @@
 #!/bin/bash
 #
 #   ___  _   _       _            
-#  / _ \| \ | | ___ | |_ ___  ___ 
-# | | | |  \| |/ _ \| __/ _ \/ __|
-# | |_| | |\  | (_) | ||  __/\__ \
-#  \__\_\_| \_|\___/ \__\___||___/
+#  / _ \| \ | | ___ | |_ ___ 
+# | | | |  \| |/ _ \| __/ _ \
+# | |_| | |\  | (_) | ||  __/
+#  \__\_\_| \_|\___/ \__\___|
 #                                 
-# A simple note taking app that is quick and easy to use
+# A simple note taking "app" that is quick and easy to use
+# v0.0.1 - https://github.com/andresemartinez/qnote
 #
 
 # Configurations
 
-## Existent directory for notes
-NOTES_FOLDER="$HOME/notes"
+## Directory for notes. It should be created by the user before to using qnote.
+NOTE_DIR="$HOME/notes"
 
-## Notes extension (if any)
+## Note file extension. Leave empty if no extension needed.
 NOTE_EXTENSION="md"
+
+## Note editor of choice. Defaults to vim if EDITOR is not defined.
+## Can be overriden to use an editor diferent than EDITOR.
+NOTE_EDITOR=${EDITOR:-vim}
 
 
 # Helper functions
@@ -37,20 +42,20 @@ build_note_file_name() {
 build_note_path() {
     NOTE_NAME="$1"
     NOTE_FILE_NAME="$(build_note_file_name "$NOTE_NAME")"
-    echo "$NOTES_FOLDER/$NOTE_FILE_NAME"
+    echo "$NOTE_DIR/$NOTE_FILE_NAME"
 }
 
 
 # Action functions
 
 list_notes() {
-    exa --long -a "$NOTES_FOLDER"
+    exa --long -a "$NOTE_DIR"
 }
 
 edit_note() {
     NOTE_NAME="$1"
     validate_note_name "$NOTE_NAME"
-    vim "$(build_note_path "$NOTE_NAME")"
+    $NOTE_EDITOR "$(build_note_path "$NOTE_NAME")"
 }
 
 delete_note() {
@@ -66,37 +71,42 @@ copy_note() {
 }
 
 read_with_glow() {
-    [ -z "$(which glow)" ] && { echo "Couldn't find glow. Is it installed? https://github.com/charmbracelet/glow"; exit 1; }
+    [ -z "$(which glow)" ] && { echo "Couldn't find glow. Is it installed? (https://github.com/charmbracelet/glow)"; exit 1; }
     if [ -z "$1" ]
     then
-        NOTE_NAME="$NOTES_FOLDER"
+        NOTE_PATH="$NOTE_DIR"
     else
-        NOTE_NAME=$(build_note_path "$1")
+        NOTE_PATH="$(build_note_path "$1")"
     fi
-    glow "$NOTE_NAME"
+    glow "$NOTE_PATH"
 }
 
-print_invalid_option() {
-    echo "Invalid option (${1:-<empty>})"
+handle_invalid_option() {
+    print_invalid_option_message "$1"
     print_help
+    exit 1
+}
+
+print_invalid_option_message() {
+    [ -z "$1" ] || echo "Invalid option ($1)"
 }
 
 print_help() {
     echo "Help!"
-    echo " list   | l : list notes"
-    echo " edit   | e : edit note (expects note name)"
-    echo " delete | d : delete note (expects note name)"
-    echo " glow   | g : read note/s with glow"
-    echo " copy   | cp: copy note (expects note name)"
-    echo " help   | h : print help"
+    echo "- l, list   : List notes"
+    echo "- e, edit   : Create/Edit note (expects note name)"
+    echo "- d, delete : Delete note (expects note name)"
+    echo "- g, glow   : Read note with glow"
+    echo "- cp, copy  : Copy note to clipboard (expects note name)"
+    echo "- h, help   : Print help"
 }
 
-case $1 in
-    list   | l ) list_notes ;;
-    edit   | e ) edit_note $2 ;;
-    delete | d ) delete_note $2 ;;
-    copy   | cp) copy_note $2 ;;
-    glow   | g ) read_with_glow $2 ;;
-    help   | h ) print_help ;;
-    *          ) print_invalid_option ; exit 1 ;;
+case "$1" in
+    l  | list  ) list_notes ;;
+    e  | edit  ) edit_note "$2" ;;
+    d  | delete) delete_note "$2" ;;
+    cp | copy  ) copy_note "$2" ;;
+    g  | glow  ) read_with_glow "$2" ;;
+    h  | help  ) print_help ;;
+    *          ) handle_invalid_option "$1" ;;
 esac
