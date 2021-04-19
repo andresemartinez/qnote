@@ -1,0 +1,102 @@
+#!/bin/bash
+#
+#   ___  _   _       _            
+#  / _ \| \ | | ___ | |_ ___  ___ 
+# | | | |  \| |/ _ \| __/ _ \/ __|
+# | |_| | |\  | (_) | ||  __/\__ \
+#  \__\_\_| \_|\___/ \__\___||___/
+#                                 
+# A simple note taking app that is quick and easy to use
+#
+
+# Configurations
+
+## Existent directory for notes
+NOTES_FOLDER="$HOME/notes"
+
+## Notes extension (if any)
+NOTE_EXTENSION="md"
+
+
+# Helper functions
+
+normalize_note_name() {
+    echo "$1" | sed 's/ /-/g'
+}
+
+validate_note_name() {
+    [ -z "$1" ] && { echo "Note name required :S"; exit 1; }
+}
+
+build_note_file_name() {
+    NOTE_NAME="$1"
+    NORMALIZED_NOTE_NAME="$(normalize_note_name "$NOTE_NAME")"
+    echo "${NORMALIZED_NOTE_NAME%*.$NOTE_EXTENSION}.$NOTE_EXTENSION"
+}
+
+build_note_path() {
+    NOTE_NAME="$1"
+    NOTE_FILE_NAME="$(build_note_file_name "$NOTE_NAME")"
+    echo "$NOTES_FOLDER/$NOTE_FILE_NAME"
+}
+
+
+# Action functions
+
+list_notes() {
+    exa --long -a "$NOTES_FOLDER"
+}
+
+edit_note() {
+    NOTE_NAME="$1"
+    validate_note_name "$NOTE_NAME"
+    vim "$(build_note_path "$NOTE_NAME")"
+}
+
+delete_note() {
+    NOTE_NAME="$1"
+    validate_note_name "$NOTE_NAME"
+    rm "$(build_note_path "$NOTE_NAME")"
+}
+
+copy_note() {
+    NOTE_NAME="$1"
+    validate_note_name "$NOTE_NAME"
+    cat "$(build_note_path "$NOTE_NAME")" | wl-copy 
+}
+
+read_with_glow() {
+    [ -z "$(which glow)" ] && { echo "Couldn't find glow. Is it installed? https://github.com/charmbracelet/glow"; exit 1; }
+    if [ -z "$1" ]
+    then
+        NOTE_NAME="$NOTES_FOLDER"
+    else
+        NOTE_NAME=$(build_note_path "$1")
+    fi
+    glow "$NOTE_NAME"
+}
+
+print_invalid_option() {
+    echo "Invalid option (${1:-<empty>})"
+    print_help
+}
+
+print_help() {
+    echo "Help!"
+    echo " list   | l : list notes"
+    echo " edit   | e : edit note (expects note name)"
+    echo " delete | d : delete note (expects note name)"
+    echo " glow   | g : read note/s with glow"
+    echo " copy   | cp: copy note (expects note name)"
+    echo " help   | h : print help"
+}
+
+case $1 in
+    list   | l ) list_notes ;;
+    edit   | e ) edit_note $2 ;;
+    delete | d ) delete_note $2 ;;
+    copy   | cp) copy_note $2 ;;
+    glow   | g ) read_with_glow $2 ;;
+    help   | h ) print_help ;;
+    *          ) print_invalid_option ; exit 1 ;;
+esac
