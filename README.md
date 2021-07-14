@@ -1,6 +1,6 @@
 # qnote
 
-A simple note taking "app"
+A quick note taking app
 
 ## Inspiration
 
