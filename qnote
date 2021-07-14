@@ -7,26 +7,25 @@
 #  \__\_\_| \_|\___/ \__\___|
 #                                 
 # A simple note taking "app" that is quick and easy to use
-# v0.0.1 - https://github.com/andresemartinez/qnote
+# v0.0.2 - https://github.com/andresemartinez/qnote
 #
 
 # Configurations
 
-## Directory for notes. It should be created by the user before to using qnote.
-NOTE_DIR="$HOME/notes"
+## Notes directory.
+QNOTE_DIR="${QNOTE_DIR:-$HOME/notes}"
 
-## Note file extension. Leave empty if no extension needed.
-NOTE_EXTENSION="md"
+## Notes file extension. Leave empty if no extension needed.
+QNOTE_EXTENSION="${QNOTE_EXTENSION:-md}"
 
-## Note editor of choice. Defaults to vim if EDITOR is not defined.
-## Can be overriden to use an editor diferent than EDITOR.
-NOTE_EDITOR=${EDITOR:-vim}
+## Notes editor of choice.
+QNOTE_EDITOR=${QNOTE_EDITOR:-$EDITOR}
 
 
 # Helper functions
 
 normalize_note_name() {
-    echo "$1" | sed 's/ /-/g'
+    echo "${1// /-}"
 }
 
 validate_note_name() {
@@ -36,26 +35,30 @@ validate_note_name() {
 build_note_file_name() {
     NOTE_NAME="$1"
     NORMALIZED_NOTE_NAME="$(normalize_note_name "$NOTE_NAME")"
-    echo "${NORMALIZED_NOTE_NAME%*.$NOTE_EXTENSION}.$NOTE_EXTENSION"
+    echo "${NORMALIZED_NOTE_NAME%*.$QNOTE_EXTENSION}.$QNOTE_EXTENSION"
 }
 
 build_note_path() {
     NOTE_NAME="$1"
     NOTE_FILE_NAME="$(build_note_file_name "$NOTE_NAME")"
-    echo "$NOTE_DIR/$NOTE_FILE_NAME"
+    echo "$QNOTE_DIR/$NOTE_FILE_NAME"
+}
+
+print_invalid_option_message() {
+    [ -z "$1" ] || echo "Invalid option ($1)"
 }
 
 
 # Action functions
 
 list_notes() {
-    exa --long -a "$NOTE_DIR"
+    exa --long -a "$QNOTE_DIR"
 }
 
 edit_note() {
     NOTE_NAME="$1"
     validate_note_name "$NOTE_NAME"
-    $NOTE_EDITOR "$(build_note_path "$NOTE_NAME")"
+    $QNOTE_EDITOR "$(build_note_path "$NOTE_NAME")"
 }
 
 delete_note() {
@@ -64,21 +67,43 @@ delete_note() {
     rm "$(build_note_path "$NOTE_NAME")"
 }
 
+search_in_notes() {
+    SEARCH_CRITERIA="$1"
+    ESCAPED_QNOTE_DIR="${QNOTE_DIR//\//\\\/}"
+    grep -R "$SEARCH_CRITERIA" "$QNOTE_DIR" | sed -e "s/^$ESCAPED_QNOTE_DIR\\///"
+}
+
 copy_note() {
     NOTE_NAME="$1"
     validate_note_name "$NOTE_NAME"
-    cat "$(build_note_path "$NOTE_NAME")" | wl-copy 
+    wl-copy < "$(build_note_path "$NOTE_NAME")"
 }
 
 read_with_glow() {
-    [ -z "$(which glow)" ] && { echo "Couldn't find glow. Is it installed? (https://github.com/charmbracelet/glow)"; exit 1; }
+    [ -z "$(command -v glow)" ] && { echo "Couldn't find glow. Is it installed? (https://github.com/charmbracelet/glow)"; exit 1; }
     if [ -z "$1" ]
     then
-        NOTE_PATH="$NOTE_DIR"
+        NOTE_PATH="$QNOTE_DIR"
     else
         NOTE_PATH="$(build_note_path "$1")"
     fi
     glow "$NOTE_PATH"
+}
+
+print_help() {
+    echo "Help!"
+    echo "- l,  list   : List notes"
+    echo "- e,  edit   : Create/Edit note"
+    echo "- d,  delete : Delete note"
+    echo "- s,  search : Search in notes"
+    echo "- g,  glow   : Read note with glow"
+    echo "- cp, copy   : Copy note to clipboard"
+    echo "- h,  help   : Print help"
+    echo "- v, version : Print version"
+}
+
+print_version() {
+    echo "QNote - v0.0.2"
 }
 
 handle_invalid_option() {
@@ -87,26 +112,14 @@ handle_invalid_option() {
     exit 1
 }
 
-print_invalid_option_message() {
-    [ -z "$1" ] || echo "Invalid option ($1)"
-}
-
-print_help() {
-    echo "Help!"
-    echo "- l, list   : List notes"
-    echo "- e, edit   : Create/Edit note (expects note name)"
-    echo "- d, delete : Delete note (expects note name)"
-    echo "- g, glow   : Read note with glow"
-    echo "- cp, copy  : Copy note to clipboard (expects note name)"
-    echo "- h, help   : Print help"
-}
-
 case "$1" in
-    l  | list  ) list_notes ;;
-    e  | edit  ) edit_note "$2" ;;
-    d  | delete) delete_note "$2" ;;
-    cp | copy  ) copy_note "$2" ;;
-    g  | glow  ) read_with_glow "$2" ;;
-    h  | help  ) print_help ;;
-    *          ) handle_invalid_option "$1" ;;
+    l  | list    ) list_notes                 ;;
+    e  | edit    ) edit_note "$2"             ;;
+    d  | delete  ) delete_note "$2"           ;;
+    s  | search  ) search_in_notes "$2"       ;;
+    cp | copy    ) copy_note "$2"             ;;
+    g  | glow    ) read_with_glow "$2"        ;;
+    h  | help    ) print_help                 ;;
+    v  | version ) print_version              ;; 
+    *            ) handle_invalid_option "$1" ;;
 esac

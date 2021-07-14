@@ -1,9 +1,13 @@
 # qnote
+
 A simple note taking "app" that is quick an easy to use
 
 ## Inspiration
-A found myself needing to take quick disposable notes during meetings, while coding or just to remember future me of what I was doing yesterday.  
-In this kind of situations I'm not looking for fancy features (like a gorgeous UI or even synchronization), I just need something that runs fast and is ready at my fingertips at any time.
+
+A found myself needing to take quick disposable notes during meetings, while coding or just to remember future   
+me of what I was doing yesterday.  
+In this kind of situations I'm not looking for fancy features (like a gorgeous UI or even synchronization),   
+I just need something that runs fast and is ready at my fingertips at any time.
 
 ## Instalation
 
@@ -14,4 +18,11 @@ In this kind of situations I'm not looking for fancy features (like a gorgeous U
 
 ## Configuration
 
-The script is not that long, feel free to clone and change whatever you want to make it suit your needs
+| Variable        | Description            | Default     |
+| --------------- | ---------------------- | ----------- |
+| QNOTE_DIR       | Notes home directory   | $HOME/notes |
+| QNOTE_EXTENSION | Notes file extension   | md          |
+| QNOTE_EDITOR    | Notes editor of choice | $EDITOR     | 
+
+
+**Pro Tip:** The script is not that long, feel free to change whatever you want to make it suit your needs
