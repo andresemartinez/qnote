@@ -6,23 +6,23 @@
 # | |_| | |\  | (_) | ||  __/
 #  \__\_\_| \_|\___/ \__\___|
 #                                 
-# A simple note taking "app" that is quick and easy to use
-# v0.0.2 - https://github.com/andresemartinez/qnote
+# A quick note taking app
+# v0.0.3 - https://github.com/andresemartinez/qnote
 #
 
-# Configurations
+# Configurations ------------------------------------------------------------------------
 
 ## Notes directory.
 QNOTE_DIR="${QNOTE_DIR:-$HOME/notes}"
 
-## Notes file extension. Leave empty if no extension needed.
+## Notes file extension.
 QNOTE_EXTENSION="${QNOTE_EXTENSION:-md}"
 
 ## Notes editor of choice.
 QNOTE_EDITOR=${QNOTE_EDITOR:-$EDITOR}
 
 
-# Helper functions
+# Helper functions ----------------------------------------------------------------------
 
 normalize_note_name() {
     echo "${1// /-}"
@@ -36,6 +36,7 @@ build_note_file_name() {
     NOTE_NAME="$1"
     NORMALIZED_NOTE_NAME="$(normalize_note_name "$NOTE_NAME")"
     echo "${NORMALIZED_NOTE_NAME%*.$QNOTE_EXTENSION}.$QNOTE_EXTENSION"
+
 }
 
 build_note_path() {
@@ -49,10 +50,10 @@ print_invalid_option_message() {
 }
 
 
-# Action functions
+# Action functions ----------------------------------------------------------------------
 
 list_notes() {
-    exa --long -a "$QNOTE_DIR"
+    find "$QNOTE_DIR" -type f -printf "%TY-%Tm-%Td %TH:%TM - %P\\n" | sort -r
 }
 
 edit_note() {
@@ -70,7 +71,7 @@ delete_note() {
 search_in_notes() {
     SEARCH_CRITERIA="$1"
     ESCAPED_QNOTE_DIR="${QNOTE_DIR//\//\\\/}"
-    grep -R "$SEARCH_CRITERIA" "$QNOTE_DIR" | sed -e "s/^$ESCAPED_QNOTE_DIR\\///"
+    grep -iR "$SEARCH_CRITERIA" "$QNOTE_DIR" | sed -e "s/^$ESCAPED_QNOTE_DIR\\///"
 }
 
 copy_note() {
@@ -81,29 +82,31 @@ copy_note() {
 
 read_with_glow() {
     [ -z "$(command -v glow)" ] && { echo "Couldn't find glow. Is it installed? (https://github.com/charmbracelet/glow)"; exit 1; }
+
     if [ -z "$1" ]
     then
         NOTE_PATH="$QNOTE_DIR"
     else
         NOTE_PATH="$(build_note_path "$1")"
     fi
+
     glow "$NOTE_PATH"
 }
 
 print_help() {
     echo "Help!"
-    echo "- l,  list   : List notes"
-    echo "- e,  edit   : Create/Edit note"
-    echo "- d,  delete : Delete note"
-    echo "- s,  search : Search in notes"
-    echo "- g,  glow   : Read note with glow"
-    echo "- cp, copy   : Copy note to clipboard"
-    echo "- h,  help   : Print help"
-    echo "- v, version : Print version"
+    echo "- l,  list    : List notes"
+    echo "- e,  edit    : Create/Edit note"
+    echo "- d,  delete  : Delete note"
+    echo "- s,  search  : Search in notes"
+    echo "- g,  glow    : Read note with glow"
+    echo "- cp, copy    : Copy note to clipboard"
+    echo "- h,  help    : Print help"
+    echo "- v,  version : Print version"
 }
 
 print_version() {
-    echo "QNote - v0.0.2"
+    echo "QNote - v0.0.3"
 }
 
 handle_invalid_option() {

@@ -6,8 +6,7 @@ A quick note taking app
 
 A found myself needing to take quick disposable notes during meetings, while coding or just to remember future   
 me of what I was doing yesterday.  
-In this kind of situations I'm not looking for fancy features (like a gorgeous UI or even synchronization),   
-I just need something that runs fast and is ready at my fingertips at any time.
+In this kind of situations I need something that runs fast and is ready at my fingertips at any time.
 
 ## Instalation
 
