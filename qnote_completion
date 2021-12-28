@@ -6,7 +6,7 @@ QNOTE_DIR="${QNOTE_DIR:-$HOME/notes}"
 _notes_completions() {
 
     case $COMP_CWORD in
-        1) COMPREPLY=($(compgen -W "list l edit e delete d search s copy cp glow g help h version v" "${COMP_WORDS[1]}")) ;;
+        1) COMPREPLY=($(compgen -W "list l edit e delete d inline i search s copy cp glow g help h version v" "${COMP_WORDS[1]}")) ;;
         2) [ ${COMP_WORDS[1]} =~ ^(edit|e|copy|cp|delete|d|glow|g)$ ] && COMPREPLY=$(find "$QNOTE_DIR" -type f -printf "%P\n") ;;
     esac
 }

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 #   ___  _   _       _            
 #  / _ \| \ | | ___ | |_ ___ 
@@ -7,7 +7,7 @@
 #  \__\_\_| \_|\___/ \__\___|
 #                                 
 # A quick note taking app
-# v0.0.3 - https://github.com/andresemartinez/qnote
+# v0.0.4 - https://github.com/andresemartinez/qnote
 #
 
 # Configurations ------------------------------------------------------------------------
@@ -25,7 +25,11 @@ QNOTE_EDITOR=${QNOTE_EDITOR:-$EDITOR}
 # Helper functions ----------------------------------------------------------------------
 
 normalize_note_name() {
-    echo "${1// /-}"
+    NOTE_NAME="$1"
+    NOTE_NAME="${NOTE_NAME// /-}"
+    NOTE_NAME="${NOTE_NAME,,}"
+
+    echo "$NOTE_NAME"
 }
 
 validate_note_name() {
@@ -36,13 +40,19 @@ build_note_file_name() {
     NOTE_NAME="$1"
     NORMALIZED_NOTE_NAME="$(normalize_note_name "$NOTE_NAME")"
     echo "${NORMALIZED_NOTE_NAME%*.$QNOTE_EXTENSION}.$QNOTE_EXTENSION"
-
 }
 
 build_note_path() {
     NOTE_NAME="$1"
     NOTE_FILE_NAME="$(build_note_file_name "$NOTE_NAME")"
     echo "$QNOTE_DIR/$NOTE_FILE_NAME"
+}
+
+suffixed_note_name() {
+    NOTE_NAME="$1"
+    SUFFIX="$2"
+    [ "$SUFFIX" -gt 0 ] && NOTE_NAME="${NOTE_NAME//.$QNOTE_EXTENSION/_$SUFFIX.$QNOTE_EXTENSION}" 
+    echo "$NOTE_NAME"
 }
 
 print_invalid_option_message() {
@@ -66,6 +76,24 @@ delete_note() {
     NOTE_NAME="$1"
     validate_note_name "$NOTE_NAME"
     rm "$(build_note_path "$NOTE_NAME")"
+}
+
+create_note() {
+    NOTE_NAME="$1"
+    NOTE_TITLE="$1"
+    NOTE_BODY="$2"
+
+    NOTE_NAME="$(build_note_path "$NOTE_NAME")"
+    SUFFIX=0
+
+    while [ -f "$(suffixed_note_name "$NOTE_NAME" "$SUFFIX")" ]
+    do
+        SUFFIX=$((SUFFIX + 1))
+    done
+
+    NOTE_NAME="$(suffixed_note_name "$NOTE_NAME" "$SUFFIX")"
+
+    echo -ne "# $NOTE_TITLE\n$NOTE_BODY" > "$NOTE_NAME"
 }
 
 search_in_notes() {
@@ -98,6 +126,7 @@ print_help() {
     echo "- l,  list    : List notes"
     echo "- e,  edit    : Create/Edit note"
     echo "- d,  delete  : Delete note"
+    echo "- i,  inline  : Create note inline"
     echo "- s,  search  : Search in notes"
     echo "- g,  glow    : Read note with glow"
     echo "- cp, copy    : Copy note to clipboard"
@@ -106,7 +135,7 @@ print_help() {
 }
 
 print_version() {
-    echo "QNote - v0.0.3"
+    echo "QNote - v0.0.4"
 }
 
 handle_invalid_option() {
@@ -119,6 +148,7 @@ case "$1" in
     l  | list    ) list_notes                 ;;
     e  | edit    ) edit_note "$2"             ;;
     d  | delete  ) delete_note "$2"           ;;
+    i  | inline  ) create_note "$2" "$3"      ;;
     s  | search  ) search_in_notes "$2"       ;;
     cp | copy    ) copy_note "$2"             ;;
     g  | glow    ) read_with_glow "$2"        ;;
