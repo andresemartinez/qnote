@@ -66,7 +66,7 @@ print_invalid_option_message() {
 # Action functions ----------------------------------------------------------------------
 
 list_notes() {
-    FILTER_CRITERIA="${1:+-name \'*$1*\'}"
+    FILTER_CRITERIA="${1:+-name '*$1*'}"
     eval "find $QNOTE_DIR $FILTER_CRITERIA -type f -printf \"%TY-%Tm-%Td %TH:%TM - %P\\n\"" | sort -r
 }
 
