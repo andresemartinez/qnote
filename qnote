@@ -7,7 +7,7 @@
 #  \__\_\_| \_|\___/ \__\___|
 #                                 
 # A quick note taking app
-# v0.0.4 - https://github.com/andresemartinez/qnote
+# v0.0.5 - https://github.com/andresemartinez/qnote
 #
 
 # Configurations ------------------------------------------------------------------------
@@ -19,7 +19,10 @@ QNOTE_DIR="${QNOTE_DIR:-$HOME/notes}"
 QNOTE_EXTENSION="${QNOTE_EXTENSION:-md}"
 
 ## Notes editor of choice.
-QNOTE_EDITOR=${QNOTE_EDITOR:-$EDITOR}
+QNOTE_EDITOR="${QNOTE_EDITOR:-$EDITOR}"
+
+## Notes reader of choice.
+QNOTE_READER="${QNOTE_READER:-cat}"
 
 
 # Helper functions ----------------------------------------------------------------------
@@ -63,7 +66,8 @@ print_invalid_option_message() {
 # Action functions ----------------------------------------------------------------------
 
 list_notes() {
-    find "$QNOTE_DIR" -type f -printf "%TY-%Tm-%Td %TH:%TM - %P\\n" | sort -r
+    FILTER_CRITERIA="${1:+-name \'*$1*\'}"
+    eval "find $QNOTE_DIR $FILTER_CRITERIA -type f -printf \"%TY-%Tm-%Td %TH:%TM - %P\\n\"" | sort -r
 }
 
 edit_note() {
@@ -108,17 +112,9 @@ copy_note() {
     wl-copy < "$(build_note_path "$NOTE_NAME")"
 }
 
-read_with_glow() {
-    [ -z "$(command -v glow)" ] && { echo "Couldn't find glow. Is it installed? (https://github.com/charmbracelet/glow)"; exit 1; }
-
-    if [ -z "$1" ]
-    then
-        NOTE_PATH="$QNOTE_DIR"
-    else
-        NOTE_PATH="$(build_note_path "$1")"
-    fi
-
-    glow "$NOTE_PATH"
+read_note() {
+    NOTE_PATH="$(build_note_path "$1")"
+    $QNOTE_READER "$NOTE_PATH"
 }
 
 print_help() {
@@ -127,15 +123,15 @@ print_help() {
     echo "- e,  edit    : Create/Edit note"
     echo "- d,  delete  : Delete note"
     echo "- i,  inline  : Create note inline"
+    echo "- c,  cat     : Print note"
     echo "- s,  search  : Search in notes"
-    echo "- g,  glow    : Read note with glow"
     echo "- cp, copy    : Copy note to clipboard"
     echo "- h,  help    : Print help"
     echo "- v,  version : Print version"
 }
 
 print_version() {
-    echo "QNote - v0.0.4"
+    echo "QNote - v0.0.5"
 }
 
 handle_invalid_option() {
@@ -145,13 +141,13 @@ handle_invalid_option() {
 }
 
 case "$1" in
-    l  | list    ) list_notes                 ;;
+    l  | list    ) list_notes "$2"            ;;
     e  | edit    ) edit_note "$2"             ;;
     d  | delete  ) delete_note "$2"           ;;
     i  | inline  ) create_note "$2" "$3"      ;;
+    c  | cat     ) read_note "$2"             ;;
     s  | search  ) search_in_notes "$2"       ;;
     cp | copy    ) copy_note "$2"             ;;
-    g  | glow    ) read_with_glow "$2"        ;;
     h  | help    ) print_help                 ;;
     v  | version ) print_version              ;; 
     *            ) handle_invalid_option "$1" ;;
